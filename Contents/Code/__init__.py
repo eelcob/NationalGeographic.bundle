@@ -1,6 +1,3 @@
-from PMS import *
-from PMS.Objects import *
-from PMS.Shortcuts import *
 import re
 
 ####################################################################################################
@@ -208,7 +205,7 @@ def VideoSection(sender,url):
     dir = MediaContainer(viewGroup="List", title2=sender.itemTitle)
 
     # Added by sander1 to prevent errors encountered with at least 1 XML file that contained an unencoded ampersand
-    content = HTTP.Request(url)
+    content = HTTP.Request(url).content
     content = re.sub('&(?!#)(?!amp;)', '&amp;', content)
 
     for category in XML.ElementFromString(content).xpath('//children/category'):
@@ -231,7 +228,7 @@ def VideoCategory(sender, url):
     dir = MediaContainer(viewGroup="List", title2=sender.itemTitle)
 
     # Added by sander1 to prevent errors encountered with at least 1 XML file that contained an unencoded ampersand
-    content = HTTP.Request(url)
+    content = HTTP.Request(url).content
     content = re.sub('&(?!#)(?!amp;)', '&amp;', content)
 
     for category in XML.ElementFromString(content).xpath('//children/category'):
@@ -325,7 +322,7 @@ def PlayProgressiveVideo(sender, url):
 ####################################################################################################
 def GetThumb(url):
     if url != None:
-        data = HTTP.Request(url, cacheTime=CACHE_1MONTH)
+        data = HTTP.Request(url, cacheTime=CACHE_1MONTH).content
         if data:
             return DataObject(data, 'image/jpeg')
 
