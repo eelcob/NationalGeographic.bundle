@@ -16,13 +16,19 @@
 	<string>hook</string>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
+	<key>PlexAudioCodec</key>
+	<string>MP3, AAC</string>
 	<key>PlexClientPlatforms</key>
 	<string>MacOSX</string>
 	<key>PlexFrameworkVersion</key>
 	<string>2</string>
+	<key>PlexMediaContainer</key>
+	<string>FLV</string>
 	<key>PlexPluginDebug</key>
 	<string>1</string>
 	<key>PlexPluginMode</key>
 	<string>AlwaysOn</string>
+	<key>PlexVideoCodec</key>
+	<string>VP6F, H.264</string>
 </dict>
 </plist>
