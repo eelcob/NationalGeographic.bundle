@@ -1,5 +1,5 @@
 {
-    'Title': 'National Geographic',
-    'VideoTitle': 'National Geographic',
-    'PhotosTitle': 'National Geographic Photo of the Day',
+    "Title": "National Geographic",
+    "VideoTitle": "National Geographic",
+    "PhotosTitle": "National Geographic Photo of the Day"
 }

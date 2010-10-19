@@ -2,8 +2,8 @@ import re
 
 ####################################################################################################
 
-VIDEO_PREFIX = "/video/nationalgeographic"
 PHOTOS_PREFIX = "/photos/nationalgeographic"
+VIDEO_PREFIX = "/video/nationalgeographic"
 
 NAMESPACES = {'media':'http://search.yahoo.com/mrss/', 'itunes':'http://www.itunes.com/dtds/podcast-1.0.dtd', "itunesB":"http://www.itunes.com/DTDs/Podcast-1.0.dtd"}
 POD_FEED = "http://feeds.nationalgeographic.com/ng/photography/photo-of-the-day/"
@@ -24,14 +24,14 @@ VIDEO_THUMBNAIL = "http://video.nationalgeographic.com/video/player/media/%s/%s_
 NAME = L('Title')
 
 # Default artwork and icon(s)
-ART           = 'art-default.png'
+ART           = 'art-default.jpg'
 ICON          = 'icon-default.png'
 NEXT          = 'icon-more.png'
 
 ####################################################################################################
 def Start():
-    Plugin.AddPrefixHandler(VIDEO_PREFIX, VideosMainMenu, L('VideoTitle'), ICON, ART)
     Plugin.AddPrefixHandler(PHOTOS_PREFIX, PhotosMainMenu, L('PhotosTitle'), ICON, ART)
+    Plugin.AddPrefixHandler(VIDEO_PREFIX, VideosMainMenu, L('VideoTitle'), ICON, ART)
 
     Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
     Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
@@ -46,11 +46,12 @@ def Start():
     WebVideoItem.thumb = R(ICON)
 
     # Set the default cache time
-    HTTP.SetCacheTime(CACHE_1HOUR)
-    HTTP.SetHeader('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2')
+    HTTP.CacheTime = CACHE_1HOUR
+    HTTP.Headers['User-agent'] = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.10) Gecko/20100914 Firefox/3.6.10"
 
 ####################################################################################################
 def VideosMainMenu():
+    Log(CHANNEL_ROOT + CHANNEL_CAT_URL)
     # Videos main menu
     #
     # This is a port of the NG plugin for XBMC by stacked.xbmc
@@ -65,13 +66,6 @@ def VideosMainMenu():
         thumbnail = category.xpath('thumbnail')[0].text
         id = category.xpath('id')[0].text
         dir.Append(Function(DirectoryItem(ChannelVideoCategory, title=name, thumb=Function(GetThumb, url=thumbnail)), url=url, channel=id))
-
-    for section in XML.ElementFromURL(VIDEO_SECTIONS, errors='ignore').xpath('//section'):
-        name = section.text
-        name = clean(name)
-        sectionid = section.get('id')
-        url = SECTION_URL % sectionid
-        dir.Append(Function(DirectoryItem(VideoSection, title=name, summary=""), url=url))
 
     return dir
 
@@ -145,34 +139,34 @@ def ChannelVideoPlaylist(sender, title, url, channel, category, page):
             thisurl = video.xpath('datafile')[0].text
 
             thisVideo = XML.ElementFromURL(thisurl, errors='ignore')
-            title    = thisVideo.xpath('shortTitle')[0].text
-            subtitle = thisVideo.xpath('longTitle')[0].text
-            video    = thisVideo.xpath('video')[0].text
-            titleid  = thisVideo.xpath('id')[0].text
+            video_title    = thisVideo.xpath('./shortTitle')[0].text
+            subtitle = thisVideo.xpath('./longTitle')[0].text
+            video    = thisVideo.xpath('./video')[0].text
+            titleid  = thisVideo.xpath('./id')[0].text
 
             try:
-                summary = thisVideo.xpath('longDescription')[0].text
+                summary = thisVideo.xpath('./longDescription')[0].text
             except:
                 try:
-                    summary = thisVideo.xpath('shortDescription')[0].text
+                    summary = thisVideo.xpath('./shortDescription')[0].text
                 except:
                     summary = ''
 
             try:
-                episode = thisVideo.xpath('episodeTitle')[0].text
+                episode = thisVideo.xpath('./episodeTitle')[0].text
             except:
                 episode = None
 
             try:
-                rating = thisVideo.xpath('rating')[0].text
+                rating = thisVideo.xpath('./rating')[0].text
             except:
                 rating = None
 
             try:
-                thumb = thisVideo.xpath('still')[0].text
+                thumb = thisVideo.xpath('./still')[0].text
             except:
                 try:
-                    thumb = thisVideo.xpath('thumbnail')[0].text
+                    thumb = thisVideo.xpath('./thumbnail')[0].text
                 except:
                     thumb = None
 
@@ -185,7 +179,7 @@ def ChannelVideoPlaylist(sender, title, url, channel, category, page):
                 longsummary = longsummary+"\n\n"
             longsummary = longsummary + summary
 
-            dir.Append(Function(WebVideoItem(PlayVideo, title=title, subtitle=subtitle, summary=longsummary, thumb=Function(GetThumb, url=thumb)), url=video))
+            dir.Append(Function(WebVideoItem(PlayVideo, title=video_title, subtitle=subtitle, summary=longsummary, thumb=Function(GetThumb, url=thumb)), url=video))
 
             #videourl = CHANNEL_VIDEO_URL % (channel, category, titleid)
             #Log(videourl,debugOnly=False)
@@ -194,7 +188,7 @@ def ChannelVideoPlaylist(sender, title, url, channel, category, page):
         if (page < pageCount):
             page = page+1
             nextpage = "Next page ("+str(page)+" of "+str(pageCount)+")"
-            dir.Append(Function(DirectoryItem(ChannelVideoPlaylist, title=nextpage, thumb=R(NEXT)), title=title, url=url, channel=channel, category=id, page=page))
+            dir.Append(Function(DirectoryItem(ChannelVideoPlaylist, title=nextpage, thumb=R(NEXT)), title=title, url=url, channel=channel, category=category, page=page))
 
     return dir
 
@@ -294,23 +288,23 @@ def ItemDescription(item):
     if description == None:
         description = ""
     description = String.StripTags(description.strip())
-
+    
     return description
 
 ####################################################################################################
 def PlayVideo(sender, url):
     flvconfig  = XML.ElementFromURL(url, errors='ignore', cacheTime=0) # cacheTime=0 to get a fresh (and working) authorization string for the Akamai streams every time
-    serverName = flvconfig.xpath('serverName')[0].text
-    appName    = String.Quote(flvconfig.xpath('appName')[0].text, usePlus=False)
-    playPath   = String.Quote(flvconfig.xpath('streamName')[0].text, usePlus=False)
+    serverName = flvconfig.xpath('./serverName')[0].text
+    appName    = String.Quote(flvconfig.xpath('./appName')[0].text, usePlus=False)
+    playPath   = String.Quote(flvconfig.xpath('./streamName')[0].text, usePlus=False)
 
-    if (flvconfig.xpath('isLive')[0].text == "True"):
+    if (flvconfig.xpath('./isLive')[0].text == "true"):
         isLive = True
     else:
         isLive = False
 
     videourl = 'rtmp://'+serverName+'/'+appName
-    Log(videourl, debugOnly=False)
+    Log(videourl)
     return Redirect( RTMPVideoItem( url=videourl, clip=playPath, live=bool(isLive) ) )
 
 ####################################################################################################
@@ -322,8 +316,9 @@ def PlayProgressiveVideo(sender, url):
 ####################################################################################################
 def GetThumb(url):
     if url != None:
-        data = HTTP.Request(url, cacheTime=CACHE_1MONTH).content
-        if data:
+        try:
+            data = HTTP.Request(url, cacheTime=CACHE_1MONTH).content
             return DataObject(data, 'image/jpeg')
-
+        except:
+            pass
     return Redirect( R(ICON) )
