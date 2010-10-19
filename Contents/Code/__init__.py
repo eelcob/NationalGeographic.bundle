@@ -60,11 +60,11 @@ def VideosMainMenu():
     dir = MediaContainer(viewGroup="List")
 
     for category in XML.ElementFromURL(CHANNEL_ROOT+CHANNEL_CAT_URL, errors='ignore').xpath('//category'):
-        name = category.xpath('name')[0].text
+        name = category.xpath('./name')[0].text
         name = clean(name)
-        url = category.xpath('datafile')[0].text
-        thumbnail = category.xpath('thumbnail')[0].text
-        id = category.xpath('id')[0].text
+        url = category.xpath('./datafile')[0].text
+        thumbnail = category.xpath('./thumbnail')[0].text
+        id = category.xpath('./id')[0].text
         dir.Append(Function(DirectoryItem(ChannelVideoCategory, title=name, thumb=Function(GetThumb, url=thumbnail)), url=url, channel=id))
 
     return dir
@@ -77,11 +77,11 @@ def PhotosMainMenu():
     dir = MediaContainer()
 
     for item in XML.ElementFromURL(POD_FEED, errors='ignore').xpath('//item'):
-        title = item.xpath('title')[0].text
+        title = item.xpath('./title')[0].text
 
         subtitle = None
-        if len(item.xpath('pubDate')) > 0:
-            subtitle = Datetime.ParseDate(item.xpath('pubDate')[0].text).strftime('%a %b %d, %Y')
+        if len(item.xpath('./pubDate')) > 0:
+            subtitle = Datetime.ParseDate(item.xpath('./pubDate')[0].text).strftime('%a %b %d, %Y')
 
         description = ItemDescription(item)
 
@@ -93,7 +93,7 @@ def PhotosMainMenu():
             media = media.replace('360x270','990x742')
 
         if media == None:
-            enclosures = item.xpath('enclosure')
+            enclosures = item.xpath('./enclosure')
             if len(enclosures) > 0:
                 media = enclosures[0].get('url')
                 media = media.replace('360x270','990x742')
@@ -111,9 +111,9 @@ def ChannelVideoCategory(sender, url, channel):
 
     myurl = CHANNEL_ROOT+url
     for playlist in XML.ElementFromURL(myurl, errors='ignore').xpath('//playlist'):
-        name = playlist.xpath('name')[0].text
-        url  = playlist.xpath('datafile')[0].text
-        id   = playlist.xpath('id')[0].text
+        name = playlist.xpath('./name')[0].text
+        url  = playlist.xpath('./datafile')[0].text
+        id   = playlist.xpath('./id')[0].text
         dir.Append(Function(DirectoryItem(ChannelVideoPlaylist, title=name), title=name, url=url, channel=channel, category=id, page=1))
 
     return dir
@@ -126,17 +126,17 @@ def ChannelVideoPlaylist(sender, title, url, channel, category, page):
 
     myurl = CHANNEL_ROOT+url
     videos = XML.ElementFromURL(myurl, errors='ignore').xpath('//videos')[0]
-    videoCount = int(videos.xpath('videoCount')[0].text)
-    pageCount  = int(videos.xpath('pageCount')[0].text)
-    prefix = videos.xpath('prefixSortByDate')[0].text
+    videoCount = int(videos.xpath('./videoCount')[0].text)
+    pageCount  = int(videos.xpath('./pageCount')[0].text)
+    prefix = videos.xpath('./prefixSortByDate')[0].text
 
     if (videoCount == 0):
         return MessageContainer(title, "No videos available")
     else:
         myurl = CHANNEL_ROOT+prefix+str(page)+'.xml'
         for video in XML.ElementFromURL(myurl, errors='ignore', cacheTime=CACHE_1WEEK).xpath('//video'):
-            name    = clean(video.xpath('shortTitle')[0].text)
-            thisurl = video.xpath('datafile')[0].text
+            name    = clean(video.xpath('./shortTitle')[0].text)
+            thisurl = video.xpath('./datafile')[0].text
 
             thisVideo = XML.ElementFromURL(thisurl, errors='ignore')
             video_title    = thisVideo.xpath('./shortTitle')[0].text
@@ -203,10 +203,10 @@ def VideoSection(sender,url):
     content = re.sub('&(?!#)(?!amp;)', '&amp;', content)
 
     for category in XML.ElementFromString(content).xpath('//children/category'):
-        name = clean(category.xpath('name')[0].text)
+        name = clean(category.xpath('./name')[0].text)
         categoryid = category.get('id')
         thumb = CATEGORY_THUMBNAIL % categoryid
-        if(category.xpath('hasVideo')[0].text == 'true'):
+        if(category.xpath('./hasVideo')[0].text == 'true'):
             url2 = VIDEO_ASSETS_URL % categoryid
             dir.Append(Function(DirectoryItem(VideoAssets, title=name, thumb=Function(GetThumb, url=thumb)), url=url2))
         else:
@@ -226,7 +226,7 @@ def VideoCategory(sender, url):
     content = re.sub('&(?!#)(?!amp;)', '&amp;', content)
 
     for category in XML.ElementFromString(content).xpath('//children/category'):
-        name = clean(category.xpath('name')[0].text)
+        name = clean(category.xpath('./name')[0].text)
         categoryid = category.get('id')
         url2 = VIDEO_ASSETS_URL % categoryid
         thumb = CATEGORYASSET_THUMBNAIL % (categoryid, categoryid)
@@ -251,7 +251,7 @@ def VideoAssets(sender, url, page=0):
     i = 1
     for video in XML.ElementFromURL(myurl, errors='ignore').xpath('//videoasset'):
         refid = video.get('refid')
-        title = clean(video.xpath('title')[0].text)
+        title = clean(video.xpath('./title')[0].text)
         title = str(pagesize*page+i)+'.  '+title
         videoXmlUrl = VIDEO_URL % refid
         try:
@@ -283,8 +283,8 @@ def ItemDescription(item):
     # Function to pull item's description
     # From FeedMe plugin
     description = ""
-    if len(item.xpath('description')) > 0:
-        description = item.xpath('description')[0].text
+    if len(item.xpath('./description')) > 0:
+        description = item.xpath('./description')[0].text
     if description == None:
         description = ""
     description = String.StripTags(description.strip())
