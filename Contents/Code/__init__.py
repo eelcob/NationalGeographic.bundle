@@ -47,7 +47,7 @@ def Start():
 
     # Set the default cache time
     HTTP.CacheTime = CACHE_1HOUR
-    HTTP.Headers['User-agent'] = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.10) Gecko/20100914 Firefox/3.6.10"
+    HTTP.Headers['User-Agent'] = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.16) Gecko/20110319 Firefox/3.6.16"
 
 ####################################################################################################
 def VideosMainMenu():
@@ -139,16 +139,19 @@ def ChannelVideoPlaylist(sender, title, url, channel, category, page):
             thisurl = video.xpath('./datafile')[0].text
 
             thisVideo = XML.ElementFromURL(thisurl, errors='ignore')
-            video_title    = thisVideo.xpath('./shortTitle')[0].text
+            video_title = thisVideo.xpath('./shortTitle')[0].text
             subtitle = thisVideo.xpath('./longTitle')[0].text
             video    = thisVideo.xpath('./video')[0].text
             titleid  = thisVideo.xpath('./id')[0].text
 
+            Log(video_title)
             try:
                 summary = thisVideo.xpath('./longDescription')[0].text
+                summery = summary + '' # Fails if is None -> use the shortDescription
             except:
                 try:
                     summary = thisVideo.xpath('./shortDescription')[0].text
+                    summery = summary + '' # Fails if is None -> use empty summary
                 except:
                     summary = ''
 
