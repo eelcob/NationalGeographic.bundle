@@ -8,18 +8,6 @@ VIDEO_PREFIX = "/video/nationalgeographic"
 NAMESPACES = {'media':'http://search.yahoo.com/mrss/', 'itunes':'http://www.itunes.com/dtds/podcast-1.0.dtd', "itunesB":"http://www.itunes.com/DTDs/Podcast-1.0.dtd"}
 POD_FEED = "http://feeds.nationalgeographic.com/ng/photography/photo-of-the-day/"
 
-# Video urls
-CHANNEL_ROOT = "http://channel.nationalgeographic.com/channel/videos/feeds/cv/us/"
-CHANNEL_CAT_URL = "player_0000059.xml"
-CHANNEL_VIDEO_URL = "http://channel.nationalgeographic.com/channel/videos/player.html?channel=%s&category=%s&title=%s"
-SECTION_URL = "http://video.nationalgeographic.com/video/player/data/xml/section_%s.xml"
-VIDEO_CATEGORY_URL = "http://video.nationalgeographic.com/video/player/data/xml/category_%s.xml"
-VIDEO_ASSETS_URL = "http://video.nationalgeographic.com/video/player/data/xml/category_assets_%s.xml"
-CATEGORY_THUMBNAIL = "http://video.nationalgeographic.com/video/player/media/featured_categories/%s_102x68.jpg"
-CATEGORYASSET_THUMBNAIL = "http://video.nationalgeographic.com/video/player/media/%s/%s_150x100.jpg"
-VIDEO_URL = "http://video.nationalgeographic.com/video/cgi-bin/cdn-auth/cdn_tokenized_url.pl?slug=%s&siteid=popupmain"
-VIDEO_THUMBNAIL = "http://video.nationalgeographic.com/video/player/media/%s/%s_480x360.jpg"
-
 BASE_URL = "http://video.nationalgeographic.com"
 JSON_CAT_URL = "http://video.nationalgeographic.com/video/player/data/mp4/json/main_sections.json"
 JSON_CHANNEL_CAT_URL = "http://video.nationalgeographic.com/video/player/data/mp4/json/category_%s.json"
@@ -40,6 +28,7 @@ def Start():
 
     Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
     Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
+    Plugin.AddViewGroup("Pictures", viewMode="Pictures", mediaType="photos")
 
     # Set the default ObjectContainer attributes
     ObjectContainer.art = R(ART)
@@ -64,7 +53,7 @@ def VideosMainMenu():
     categories = JSON.ObjectFromURL(JSON_CAT_URL)
     for category in categories['sectionlist']['section']:
         name = category['label']
-        oc.add(DirectoryObject(key = Callback(ChannelVideoCategory, id = category['id'], name = name), title = name))
+        oc.add(DirectoryObject(key = Callback(ChannelVideoCategory, id = category['id'], name = CleanName(name)), title = name))
 
     return oc
 
@@ -76,7 +65,7 @@ def ChannelVideoCategory(id, name):
     # In this case, we will simply recursively call this function again until we find actual playlists.
     sub_categories = JSON.ObjectFromURL(JSON_CHANNEL_CAT_URL % id)
     for sub_category in sub_categories['section']['children']:
-        name = sub_category['label']
+        name = CleanName(sub_category['label'])
 
         has_child = sub_category['hasChild']
         if has_child == "true":
@@ -110,7 +99,7 @@ def ChannelVideoPlaylist(id, name, page = 0):
         
         oc.add(VideoClipObject(
             url = url, 
-            title = name, 
+            title = CleanName(name), 
             summary = String.StripTags(summary.strip()), 
             thumb = thumb,
             duration = duration))
@@ -119,8 +108,42 @@ def ChannelVideoPlaylist(id, name, page = 0):
 
 ####################################################################################################
 def PhotosMainMenu():
-    # Photo's main menu currently just listing Photo's of the Day.
-    # This section heavily inspired by FeedMe plugin
-
-    oc = ObjectContainer()
+    oc = ObjectContainer(view_group = 'Pictures')
+    
+    feed = XML.ElementFromURL(POD_FEED, errors='ignore')
+    for item in feed.xpath('//item'):
+        title = item.xpath('./title')[0].text
+        url = item.xpath('./guid')[0].text
+        thumb = item.xpath('./enclosure')[0].get('url')
+    
+        
+        # Ensure that we have a suitable description
+        description = None
+        if len(item.xpath('./description')) > 0:
+            description = item.xpath('./description')[0].text
+        if description == None:
+            description = ""
+        description = String.StripTags(description.strip())
+    
+        # Get the published date
+        date = None
+        try:
+            date = Datetime.ParseDate(item.xpath('./pubdate')[0].text)
+        except: pass
+                
+        oc.add(PhotoObject(
+            url = url,
+            title = title,
+            summary = description,
+            thumb = thumb,
+            originally_available_at = date))
+            
     return oc
+
+####################################################################################################
+def CleanName(name):
+	# Function cleans up HTML ascii stuff	
+    remove = [('&amp;','&'),('&quot;','"'),('&#233;','e'),('&#8212;',' - '),('&#39;','\''),('&#46;','.'),('&#58;',':'), ('&#8482;','')]
+    for trash, crap in remove:
+        name = name.replace(trash,crap)
+    return name.strip()
