@@ -73,6 +73,11 @@ def ChannelVideoCategory(id, name):
         else:
             oc.add(DirectoryObject(key = Callback(ChannelVideoPlaylist, id = sub_category['id'], name = name), title = name))
 
+    # It's possible that there is actually no vidoes are available for the ipad. Unfortunately, they
+    # still provide us with empty containers...
+    if len(oc) == 0:
+        return MessageContainer(name, "There are no titles available for the requested item.")
+
     return oc
 
 ####################################################################################################
@@ -104,6 +109,11 @@ def ChannelVideoPlaylist(id, name, page = 0):
             thumb = thumb,
             duration = duration))
 
+    # It's possible that there is actually no vidoes are available for the ipad. Unfortunately, they
+    # still provide us with empty containers...
+    if len(oc) == 0:
+        return MessageContainer(name, "There are no titles available for the requested item.")
+    
     return oc
 
 ####################################################################################################
