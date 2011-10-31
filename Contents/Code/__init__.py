@@ -4,9 +4,8 @@ import re
 
 PHOTOS_PREFIX = "/photos/nationalgeographic"
 VIDEO_PREFIX = "/video/nationalgeographic"
-
-NAMESPACES = {'media':'http://search.yahoo.com/mrss/', 'itunes':'http://www.itunes.com/dtds/podcast-1.0.dtd', "itunesB":"http://www.itunes.com/DTDs/Podcast-1.0.dtd"}
 POD_FEED = "http://feeds.nationalgeographic.com/ng/photography/photo-of-the-day/"
+
 
 BASE_URL = "http://video.nationalgeographic.com"
 JSON_CAT_URL = "http://video.nationalgeographic.com/video/player/data/mp4/json/main_sections.json"
