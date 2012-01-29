@@ -100,6 +100,8 @@ def ChannelVideoPlaylist(id, name, page = 0):
         video_details = JSON.ObjectFromURL(JSON_VIDEO_URL % video['id'])
         url = BASE_URL + video_details['video']['url']
         thumb = video_details['video']['still']
+        if thumb.startswith("http://") == False:
+            thumb = BASE_URL + thumb
         
         oc.add(VideoClipObject(
             url = url, 
