@@ -96,9 +96,14 @@ def ChannelVideoPlaylist(id, name, page = 0):
         duration = ((mins * 60) + secs) * 1000
 
         # In order to obtain the actual url, we need to call the specific JSON page. This will also
-        # include the 
+        # include a high resolution thumbnail that can be used. We've found a small number of JSON
+        # pages which don't actually include the URL link. We should try and detect these and simply
+        # skip them.
         video_details = JSON.ObjectFromURL(JSON_VIDEO_URL % video['id'])
         url = BASE_URL + video_details['video']['url']
+        if url == "http://video.nationalgeographic.com/video/player/":
+            continue
+
         thumb = video_details['video']['still']
         if thumb.startswith("http://") == False:
             thumb = BASE_URL + thumb
