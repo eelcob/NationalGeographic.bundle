@@ -86,7 +86,7 @@ def ChannelVideoPlaylist(id, name, page = 0):
     # Iterate over all the available playlist and extract the available information.
     playlist = JSON.ObjectFromURL(JSON_PLAYLIST_URL % (id, str(page)))
     for video in playlist['lineup']['video']:
-        name = video['title']
+        name = video['title'].replace('&#45;', '-')
         summary = video['caption']
 
         duration_text = video['time']
