@@ -90,10 +90,13 @@ def ChannelVideoPlaylist(id, name, page = 0):
         summary = video['caption']
 
         duration_text = video['time']
-        duration_dict = re.match("(?P<mins>[0-9]+):(?P<secs>[0-9]+)", duration_text).groupdict()
-        mins = int(duration_dict['mins'])
-        secs = int(duration_dict['secs'])
-        duration = ((mins * 60) + secs) * 1000
+        try:
+            duration_dict = re.match("(?P<mins>[0-9]+):(?P<secs>[0-9]+)", duration_text).groupdict()
+            mins = int(duration_dict['mins'])
+            secs = int(duration_dict['secs'])
+            duration = ((mins * 60) + secs) * 1000
+        except:
+             duration = 0
 
         # In order to obtain the actual url, we need to call the specific JSON page. This will also
         # include a high resolution thumbnail that can be used. We've found a small number of JSON
